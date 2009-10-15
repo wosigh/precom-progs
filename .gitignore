@@ -5,3 +5,5 @@ novacom
 *.lo
 *.loT
 test/test_all
+.project
+.cproject
