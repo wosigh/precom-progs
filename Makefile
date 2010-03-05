@@ -1,5 +1,5 @@
 all:
-	gcc -o novacom -I/opt/local/include -L/opt/local/lib ./src/novacom.c -lusb -Wall
+	${CC} ${CFLAGS} -o novacom -I${CC_ROOT}/usr/include -L${CC_ROOT}/usr/lib ./src/novacom.c -lusb
 	
 clean:
 	rm novacom
