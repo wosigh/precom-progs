@@ -31,8 +31,8 @@ struct usb_dev_handle* novacom_find_endpoints( uint32 *ep_in, uint32 *ep_out ) {
     struct usb_bus *bus;
 
     usb_init();
-    dbg_printf ("usb find busses return %d\n", usb_find_busses());
-    dbg_printf ("usb find devices return %d\n", usb_find_devices());
+    dbg_printf("usb find busses return %d\n", usb_find_busses());
+    dbg_printf("usb find devices return %d\n", usb_find_devices());
 
     /* Get all the USB busses to iterate through ... */
     for (bus = usb_get_busses(); bus; bus = bus->next) {
@@ -61,7 +61,9 @@ struct usb_dev_handle* novacom_find_endpoints( uint32 *ep_in, uint32 *ep_out ) {
                             /* Open the device, set the alternate setting, claim the interface and do your processing */
                             // fprintf(stderr, "Novacom found!\n") ;
                             retval = usb_open( dev ) ;
-                            dbg_printf("usb_open device %d, returned %d\n", dev, retval);
+
+                            /* Required for win32 */
+                            usb_set_configuration(retval, dev->config[c].bConfigurationValue);
 
                             if( (ret=usb_claim_interface(retval, i)) < 0 ) {
                                 fprintf(stderr, "Error claiming interface %i: %i\n", i, ret ) ;
