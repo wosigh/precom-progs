@@ -7,11 +7,21 @@
 #include <unistd.h>
 #include <string.h>
 #include <usb.h>
+#if 0
 #include <termios.h>
+#endif
 #include <assert.h>
 
 #include "novacom.h"
 #include "novacom_private.h"
+
+#define DEBUG
+
+#ifdef DEBUG
+#define dbg_printf printf
+#else
+#define dbg_printf
+#endif
 
 struct usb_dev_handle* novacom_find_endpoints( uint32 *ep_in, uint32 *ep_out ) {
     int c, i, a, ep ;
@@ -21,29 +31,37 @@ struct usb_dev_handle* novacom_find_endpoints( uint32 *ep_in, uint32 *ep_out ) {
     struct usb_bus *bus;
 
     usb_init();
-    usb_find_busses();
-    usb_find_devices();
+    dbg_printf ("usb find busses return %d\n", usb_find_busses());
+    dbg_printf ("usb find devices return %d\n", usb_find_devices());
 
     /* Get all the USB busses to iterate through ... */
     for (bus = usb_get_busses(); bus; bus = bus->next) {
+      dbg_printf("bus %p\n", bus);
 
         /* For each device .... */
         for (dev = bus->devices; dev; dev = dev->next) {
+          dbg_printf("dev %p\n", dev);
 
+          dbg_printf("idVendor %#x\n", dev->descriptor.idVendor);
             /* ... that's a Palm device! */
             if( dev->descriptor.idVendor != USB_VENDOR_PALM ) continue ;
 
             /* Loop through all of the configurations */
             for (c = 0; c < dev->descriptor.bNumConfigurations; c++) {
+              dbg_printf("configuration %d\n", c);
                 /* Loop through all of the interfaces */
                 for (i = 0; i < dev->config[c].bNumInterfaces; i++) {
+                  dbg_printf("interface %d\n", i);
                     /* Loop through all of the alternate settings */
                     for (a = 0; a < dev->config[c].interface[i].num_altsetting; a++) {
+                      dbg_printf("alternate setting %d\n", a);
                         /* Check if this interface is novacom on the phone */
                         if (is_interface_novacom(&(dev->config[c].interface[i].altsetting[a]))) {
+                          dbg_printf("Found novacom interface!\n");
                             /* Open the device, set the alternate setting, claim the interface and do your processing */
                             // fprintf(stderr, "Novacom found!\n") ;
                             retval = usb_open( dev ) ;
+                            dbg_printf("usb_open device %d, returned %d\n", dev, retval);
 
                             if( (ret=usb_claim_interface(retval, i)) < 0 ) {
                                 fprintf(stderr, "Error claiming interface %i: %i\n", i, ret ) ;
@@ -592,6 +610,7 @@ int error_check( int ret, int quit, char *msg ) {
 }
 
 
+#if 0
 static void make_raw_tty(int fd,struct termios *orig)
 {
     struct termios attr;
@@ -611,6 +630,7 @@ static void restore_tty(int fd,struct termios *attrs)
 {
     tcsetattr(fd,TCSANOW,attrs);
 }
+#endif
 
 int pmux_file_put( novacom_device_t *dev ) { return 0 ; }
 int pmux_file_get( novacom_device_t *dev ) { return 0 ; }
@@ -641,16 +661,20 @@ void usage( ) {
 int main (int argc, char **argv) {
     
     int ret;
+#if 0
     struct termios orig_tty_attr;
+#endif
 
     /* The USB device with other relavent information */ 
     novacom_device_t *dev = (novacom_device_t *)malloc( sizeof(novacom_device_t)+USB_BUFLEN ) ;
     
+#if 0
     /* Check to see if we're root before we really get into this thing */
     if( geteuid() != 0 ) {
         fprintf( stderr, "ERROR: root required for USB privilidges.  Please re-run command as root.\n" ) ;
         exit( 1 ) ;
     }
+#endif
     
     /* Initialize novacom communications */
     error_check( novacom_init( dev ), 1, "Unable to find or initialize Novacom - is your pre plugged in?\n" ) ;
@@ -679,9 +703,11 @@ int main (int argc, char **argv) {
     }
 
 
+#if 0
     if (dev->mode==MODE_TTY) {
         make_raw_tty(0,&orig_tty_attr);
     }
+#endif
 
     /* Iterate through a NOP loop */
     while (dev->state!=STATE_CLOSED) {
@@ -722,9 +748,11 @@ int main (int argc, char **argv) {
         }
     }
     
+#if 0
     if (dev->mode==MODE_TTY) {
         restore_tty(0,&orig_tty_attr);
     }
+#endif
     
     return dev->exit_code;
 }

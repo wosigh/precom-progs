@@ -7,3 +7,5 @@ novacom
 test/test_all
 .project
 .cproject
+*.swp
+*.swo
